@@ -18,7 +18,7 @@ export class UserService {
   getUserById(id: string) {
     const user = this.users.find((u) => u.id === id);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User does not found');
     }
     return user;
   }
