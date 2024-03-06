@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { isValidID } from '../helpers/id_validation';
 
 @Injectable()
 export class ArtistService {
@@ -10,8 +15,8 @@ export class ArtistService {
 
   create(createArtistDto: CreateArtistDto): Artist {
     const { name, grammy } = createArtistDto;
-    if (!name) {
-      throw new NotFoundException('Name is required');
+    if (!name || !grammy) {
+      throw new BadRequestException('Name and grammy are required');
     }
     const newArtist: Artist = {
       id: uuidv4(),
@@ -28,6 +33,7 @@ export class ArtistService {
   }
 
   findOne(id: string): Artist {
+    isValidID(id);
     const artist = this.artists.find((a) => a.id === id);
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
@@ -36,7 +42,11 @@ export class ArtistService {
   }
 
   update(id: string, updateArtistDto: UpdateArtistDto): Artist {
+    isValidID(id);
     const artist = this.findOne(id);
+    if (!artist) {
+      throw new NotFoundException(`Artist with ID ${id} not found`);
+    }
     if (updateArtistDto.name) {
       artist.name = updateArtistDto.name;
     }
@@ -47,6 +57,7 @@ export class ArtistService {
   }
 
   remove(id: string): void {
+    isValidID(id);
     const artistIndex = this.artists.findIndex((u) => u.id === id);
     if (artistIndex === -1) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
