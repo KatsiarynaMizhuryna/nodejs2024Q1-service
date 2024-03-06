@@ -8,10 +8,11 @@ import { UpdateTrackDto } from './dto/update-track.dto';
 import { Track } from './entities/track.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
+import { database } from '../database/db';
 
 @Injectable()
 export class TrackService {
-  private tracks: Track[] = [];
+  //private tracks: Track[] = [];
 
   create(createTrackDto: CreateTrackDto): Track {
     const { name, artistId, albumId, duration } = createTrackDto;
@@ -26,17 +27,17 @@ export class TrackService {
       albumId,
       duration,
     };
-    this.tracks.push(newTrack);
+    database.tracks.push(newTrack);
     return newTrack;
   }
 
   findAll() {
-    return this.tracks;
+    return database.tracks;
   }
 
   findOne(id: string): Track {
     isValidID(id);
-    const track = this.tracks.find((t) => t.id === id);
+    const track = database.tracks.find((t) => t.id === id);
     if (!track) {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
@@ -69,10 +70,10 @@ export class TrackService {
 
   remove(id: string) {
     isValidID(id);
-    const trackIndex = this.tracks.findIndex((u) => u.id === id);
+    const trackIndex = database.tracks.findIndex((u) => u.id === id);
     if (trackIndex === -1) {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
-    this.tracks.splice(trackIndex, 1);
+    database.tracks.splice(trackIndex, 1);
   }
 }

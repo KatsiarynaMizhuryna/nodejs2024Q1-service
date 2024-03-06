@@ -9,10 +9,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
+import { database } from '../database/db';
 
 @Injectable()
 export class UserService {
-  private users: User[] = [];
+  //private users: User[] = [];
 
   create(createUserDto: CreateUserDto) {
     const { login, password } = createUserDto;
@@ -28,17 +29,17 @@ export class UserService {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    this.users.push(newUser);
+    database.users.push(newUser);
     return newUser;
   }
 
   findAll(): User[] {
-    return this.users;
+    return database.users;
   }
 
   findOne(id: string): User {
     isValidID(id);
-    const user = this.users.find((u) => u.id === id);
+    const user = database.users.find((u) => u.id === id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

@@ -8,10 +8,11 @@ import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
+import { database } from '../database/db';
 
 @Injectable()
 export class ArtistService {
-  private artists: Artist[] = [];
+  //private artists: Artist[] = [];
 
   create(createArtistDto: CreateArtistDto): Artist {
     const { name, grammy } = createArtistDto;
@@ -24,17 +25,17 @@ export class ArtistService {
       grammy,
     };
 
-    this.artists.push(newArtist);
+    database.artists.push(newArtist);
     return newArtist;
   }
 
   findAll(): Artist[] {
-    return this.artists;
+    return database.artists;
   }
 
   findOne(id: string): Artist {
     isValidID(id);
-    const artist = this.artists.find((a) => a.id === id);
+    const artist = database.artists.find((a) => a.id === id);
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
     }
@@ -58,10 +59,10 @@ export class ArtistService {
 
   remove(id: string): void {
     isValidID(id);
-    const artistIndex = this.artists.findIndex((u) => u.id === id);
+    const artistIndex = database.artists.findIndex((u) => u.id === id);
     if (artistIndex === -1) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
     }
-    this.artists.splice(artistIndex, 1);
+    database.artists.splice(artistIndex, 1);
   }
 }

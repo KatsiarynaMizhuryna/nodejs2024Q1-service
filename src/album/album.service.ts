@@ -8,10 +8,11 @@ import { UpdateAlbumDto } from './dto/update-album.dto';
 import { Album } from './entities/album.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
+import { database } from '../database/db';
 
 @Injectable()
 export class AlbumService {
-  private albums: Album[] = [];
+  //private albums: Album[] = [];
 
   create(createAlbumDto: CreateAlbumDto): Album {
     const { name, year, artistId } = createAlbumDto;
@@ -26,17 +27,17 @@ export class AlbumService {
       year,
       artistId,
     };
-    this.albums.push(newAlbum);
+    database.albums.push(newAlbum);
     return newAlbum;
   }
 
   findAll() {
-    return this.albums;
+    return database.albums;
   }
 
   findOne(id: string) {
     isValidID(id);
-    const album = this.albums.find((a) => a.id === id);
+    const album = database.albums.find((a) => a.id === id);
     if (!album) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }
@@ -63,10 +64,10 @@ export class AlbumService {
 
   remove(id: string) {
     isValidID(id);
-    const albumIndex = this.albums.findIndex((u) => u.id === id);
+    const albumIndex = database.albums.findIndex((u) => u.id === id);
     if (albumIndex === -1) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }
-    this.albums.splice(albumIndex, 1);
+    database.albums.splice(albumIndex, 1);
   }
 }
