@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,10 +8,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { isValidID } from '../helpers/id_validation';
 
 @Injectable()
 export class UserService {
   private users: User[] = [];
+
   create(createUserDto: CreateUserDto) {
     const { login, password } = createUserDto;
     if (!login || !password) {
@@ -34,6 +37,7 @@ export class UserService {
   }
 
   findOne(id: string): User {
+    isValidID(id);
     const user = this.users.find((u) => u.id === id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -42,9 +46,13 @@ export class UserService {
   }
 
   update(id: string, updateUserDto: UpdateUserDto): User {
+    isValidID(id);
     const user = this.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
     if (updateUserDto.oldPassword !== user.password) {
-      throw new BadRequestException('Old password is incorrect');
+      throw new ForbiddenException('Old password is incorrect');
     }
     user.password = updateUserDto.newPassword;
     user.version += 1;
@@ -53,6 +61,7 @@ export class UserService {
   }
 
   remove(id: string): void {
+    isValidID(id);
     const userIndex = this.users.findIndex((u) => u.id === id);
     if (userIndex === -1) {
       throw new NotFoundException(`User with ID ${id} not found`);
