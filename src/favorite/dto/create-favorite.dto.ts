@@ -1,1 +1,5 @@
-export class CreateFavoriteDto {}
+export class CreateFavoriteDto {
+  artists: string[];
+  albums: string[];
+  tracks: string[];
+}
