@@ -12,6 +12,7 @@ import {
 import { TrackService } from './track.service';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
+import { ValidationPipe } from '@nestjs/common';
 
 @Controller('track')
 export class TrackController {
@@ -34,13 +35,16 @@ export class TrackController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateTrackDto: UpdateTrackDto) {
+  update(
+    @Param('id', ValidationPipe) id: string,
+    @Body() updateTrackDto: UpdateTrackDto,
+  ) {
     return this.trackService.update(id, updateTrackDto);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ValidationPipe) id: string) {
     return this.trackService.remove(id);
   }
 }

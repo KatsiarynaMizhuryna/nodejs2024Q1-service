@@ -50,6 +50,12 @@ export class TrackService {
     if (!track) {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
+    if (
+      typeof updateTrackDto.name !== 'string' ||
+      typeof updateTrackDto.duration !== 'number'
+    ) {
+      throw new BadRequestException('Invalid dto');
+    }
     if (updateTrackDto.name) {
       track.name = updateTrackDto.name;
     }
