@@ -20,16 +20,14 @@ export class ArtistService {
     if (name === undefined || grammy === undefined) {
       throw new BadRequestException('Name and grammy are required');
     }
-    if (typeof name === 'undefined' || grammy === undefined) {
-      throw new BadRequestException('Name and grammy are required');
+    if (typeof name !== 'string' || typeof grammy !== 'boolean') {
+      throw new BadRequestException('Invalid dto');
     }
     const newArtist: Artist = {
       id: uuidv4(),
       name,
       grammy,
     };
-    console.log(newArtist);
-
     database.artists.push(newArtist);
     return newArtist;
   }
