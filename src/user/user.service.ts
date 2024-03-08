@@ -3,6 +3,8 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,7 +17,7 @@ import { database } from '../database/db';
 export class UserService {
   //private users: User[] = [];
 
-  create(createUserDto: CreateUserDto) {
+  create(createUserDto: CreateUserDto): User {
     const { login, password } = createUserDto;
     if (!login || !password) {
       throw new BadRequestException('Login and password are required');
@@ -30,7 +32,13 @@ export class UserService {
       updatedAt: Date.now(),
     };
     database.users.push(newUser);
-    return newUser;
+    return {
+      id: newUser.id,
+      login: newUser.login,
+      version: newUser.version,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
+    };
   }
 
   findAll(): User[] {
@@ -48,25 +56,38 @@ export class UserService {
 
   update(id: string, updateUserDto: UpdateUserDto): User {
     isValidID(id);
+    if (!updateUserDto.newPassword || !updateUserDto.oldPassword) {
+      throw new BadRequestException(
+        'Old password and New password are required',
+      );
+    }
     const user = this.findOne(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    if (updateUserDto.oldPassword !== user.password) {
+
+    if (user.password !== updateUserDto.oldPassword) {
       throw new ForbiddenException('Old password is incorrect');
     }
     user.password = updateUserDto.newPassword;
     user.version += 1;
     user.updatedAt = Date.now();
-    return user;
+
+    return {
+      id: user.id,
+      login: user.login,
+      version: user.version,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 
   remove(id: string): void {
     isValidID(id);
-    const userIndex = this.users.findIndex((u) => u.id === id);
+    const userIndex = database.users.findIndex((u) => u.id === id);
     if (userIndex === -1) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    this.users.splice(userIndex, 1);
+    database.users.splice(userIndex, 1);
   }
 }
