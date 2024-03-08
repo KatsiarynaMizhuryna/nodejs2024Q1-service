@@ -9,6 +9,7 @@ import { Album } from './entities/album.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
 import { database } from '../database/db';
+import { validate } from 'class-validator';
 
 @Injectable()
 export class AlbumService {
@@ -16,8 +17,7 @@ export class AlbumService {
 
   create(createAlbumDto: CreateAlbumDto): Album {
     const { name, year, artistId } = createAlbumDto;
-
-    if (!name || !year || !artistId) {
+    if (name === undefined || year === undefined || artistId === undefined) {
       throw new BadRequestException('All fields are required');
     }
 
@@ -44,9 +44,16 @@ export class AlbumService {
     return album;
   }
 
-  update(id: string, updateAlbumDto: UpdateAlbumDto): Album {
+  async update(id: string, updateAlbumDto: UpdateAlbumDto): Promise<Album> {
     isValidID(id);
     const album = this.findOne(id);
+
+    if (
+      typeof updateAlbumDto.name !== 'string' ||
+      typeof updateAlbumDto.year !== 'number'
+    ) {
+      throw new BadRequestException('Invalid dto');
+    }
     if (!album) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }
@@ -68,6 +75,18 @@ export class AlbumService {
     if (albumIndex === -1) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }
+    const favoritesIndex = database.favorites.albums.findIndex(
+      (a) => a.id === id,
+    );
+    if (favoritesIndex !== -1) {
+      database.favorites.albums.splice(favoritesIndex, 1);
+    }
+
+    database.tracks.forEach((track) => {
+      if (track.albumId === id) {
+        track.albumId = null;
+      }
+    });
     database.albums.splice(albumIndex, 1);
   }
 }

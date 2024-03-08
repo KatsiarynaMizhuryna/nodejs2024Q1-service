@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Put,
+  HttpCode,
 } from '@nestjs/common';
 import { AlbumService } from './album.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
@@ -16,6 +17,7 @@ export class AlbumController {
   constructor(private readonly albumService: AlbumService) {}
 
   @Post()
+  @HttpCode(201)
   create(@Body() createAlbumDto: CreateAlbumDto) {
     return this.albumService.create(createAlbumDto);
   }
@@ -36,6 +38,7 @@ export class AlbumController {
   }
 
   @Delete(':id')
+  @HttpCode(204)
   remove(@Param('id') id: string) {
     return this.albumService.remove(id);
   }
