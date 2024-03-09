@@ -12,8 +12,6 @@ import { database } from '../database/db';
 
 @Injectable()
 export class TrackService {
-  //private tracks: Track[] = [];
-
   create(createTrackDto: CreateTrackDto): Track {
     const { name, artistId, albumId, duration } = createTrackDto;
     if (!name || !duration) {
