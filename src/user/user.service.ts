@@ -3,8 +3,6 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,8 +13,6 @@ import { database } from '../database/db';
 
 @Injectable()
 export class UserService {
-  //private users: User[] = [];
-
   create(createUserDto: CreateUserDto): User {
     const { login, password } = createUserDto;
     if (!login || !password) {
