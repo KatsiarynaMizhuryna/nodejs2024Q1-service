@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import 'dotenv/config';
+const port = process.env.PORT || 4000;
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
@@ -9,10 +12,9 @@ async function bootstrap() {
     .setTitle('Home Library Service')
     .setDescription('The home library API description')
     .setVersion('1.0')
-    //.addTag('cats')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/doc/', app, document);
-  await app.listen(4000);
+  await app.listen(port);
 }
 bootstrap();
