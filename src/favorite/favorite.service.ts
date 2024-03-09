@@ -1,36 +1,22 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { CreateFavoriteDto } from './dto/create-favorite.dto';
-import { UpdateFavoriteDto } from './dto/update-favorite.dto';
-import { Favorite, FavoritesResponse } from './entities/favorite.entity';
 import { database } from '../database/db';
 import { isValidID } from '../helpers/id_validation';
-import { ArtistService } from '../artist/artist.service';
-import { AlbumService } from '../album/album.service';
-import { TrackService } from '../track/track.service';
-import { Artist } from '../artist/entities/artist.entity';
-import { Album } from '../album/entities/album.entity';
-import { Track } from '../track/entities/track.entity';
 
 @Injectable()
 export class FavoriteService {
-  private findItemById<T extends { id: string }>(
-    items: T[],
-    id: string,
-  ): T | undefined {
-    return items.find((item) => item.id === id);
-  }
-  getAllFavorites(): FavoritesResponse {
-    const artists: Artist[] = database.favorites.artists.map((artistId) =>
-      this.findItemById(database.artists, artistId),
-    );
-    const albums: Album[] = database.favorites.albums.map((albumId) =>
-      this.findItemById(database.albums, albumId),
-    );
-    const tracks: Track[] = database.favorites.tracks.map((trackId) =>
-      this.findItemById(database.tracks, trackId),
-    );
-
-    return { artists, albums, tracks };
+  getAllFavorites() {
+    const favorites = {
+      artists: database.artists.filter((artist) =>
+        database.favorites.artists.includes(artist),
+      ),
+      albums: database.albums.filter((album) =>
+        database.favorites.albums.includes(album),
+      ),
+      tracks: database.tracks.filter((track) =>
+        database.favorites.tracks.includes(track),
+      ),
+    };
+    return favorites;
   }
 
   addTrack(id: string) {
@@ -47,7 +33,7 @@ export class FavoriteService {
 
   addAlbum(id: string) {
     isValidID(id);
-    const album = database.tracks.find((a) => a.id === id);
+    const album = database.albums.find((a) => a.id === id);
     if (!album) {
       throw new UnprocessableEntityException(
         `Album with ID ${id} does not exist`,
