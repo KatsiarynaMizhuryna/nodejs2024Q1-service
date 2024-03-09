@@ -8,13 +8,10 @@ import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
-import { validate } from 'class-validator';
 import { database } from 'src/database/db';
 
 @Injectable()
 export class ArtistService {
-  //private artists: Artist[] = [];
-
   create(createArtistDto: CreateArtistDto): Artist {
     const { name, grammy } = createArtistDto;
     if (name === undefined || grammy === undefined) {
