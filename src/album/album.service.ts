@@ -9,12 +9,9 @@ import { Album } from './entities/album.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
 import { database } from '../database/db';
-import { validate } from 'class-validator';
 
 @Injectable()
 export class AlbumService {
-  //private albums: Album[] = [];
-
   create(createAlbumDto: CreateAlbumDto): Album {
     const { name, year, artistId } = createAlbumDto;
     if (name === undefined || year === undefined || artistId === undefined) {
