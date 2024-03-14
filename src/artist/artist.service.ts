@@ -9,10 +9,30 @@ import { Artist } from './entities/artist.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
 import { database } from 'src/database/db';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ArtistService {
-  create(createArtistDto: CreateArtistDto): Artist {
+  constructor(
+    @InjectRepository(Artist)
+    private artistRepository: Repository<Artist>,
+  ) {}
+
+  async findAll(): Promise<Artist[]> {
+    return await this.artistRepository.find();
+  }
+
+  async findOne(id: string): Promise<Artist> {
+    isValidID(id);
+    const artist = await this.artistRepository.findOne({ where: { id } });
+    if (!artist) {
+      throw new NotFoundException(`Artist with ID ${id} not found`);
+    }
+    return artist;
+  }
+
+  async create(createArtistDto: CreateArtistDto): Promise<Artist> {
     const { name, grammy } = createArtistDto;
     if (name === undefined || grammy === undefined) {
       throw new BadRequestException('Name and grammy are required');
@@ -20,72 +40,26 @@ export class ArtistService {
     if (typeof name !== 'string' || typeof grammy !== 'boolean') {
       throw new BadRequestException('Invalid dto');
     }
-    const newArtist: Artist = {
-      id: uuidv4(),
+
+    const newArtist = this.artistRepository.create({
       name,
       grammy,
-    };
-    database.artists.push(newArtist);
-    return newArtist;
+    });
+    return await this.artistRepository.save(newArtist);
   }
-
-  findAll(): Artist[] {
-    return database.artists;
-  }
-
-  findOne(id: string): Artist {
+  async update(id: string, updateArtistDto: UpdateArtistDto): Promise<Artist> {
     isValidID(id);
-    const artist = database.artists.find((a) => a.id === id);
-    if (!artist) {
-      throw new NotFoundException(`Artist with ID ${id} not found`);
-    }
-    return artist;
-  }
-
-  update(id: string, updateArtistDto: UpdateArtistDto): Artist {
-    isValidID(id);
-    const artist = this.findOne(id);
-    if (!artist) {
-      throw new NotFoundException(`Artist with ID ${id} not found`);
-    }
-    if (
-      typeof updateArtistDto.grammy !== 'boolean' ||
-      typeof updateArtistDto.name !== 'string'
-    ) {
-      throw new BadRequestException('Invalid dto');
-    }
-
+    const artist = await this.findOne(id);
     artist.name = updateArtistDto.name;
     artist.grammy = updateArtistDto.grammy;
-
-    return artist;
+    return await this.artistRepository.save(artist);
   }
-  remove(id: string) {
+
+  async remove(id: string): Promise<void> {
     isValidID(id);
-    const index = database.artists.findIndex((artist) => artist.id === id);
-    if (index === -1) throw new NotFoundException('Artist not found');
-
-    const favoritesIndex = database.favorites.artists.findIndex(
-      (a) => a.id === id,
-    );
-    if (favoritesIndex !== -1) {
-      database.favorites.artists.splice(favoritesIndex, 1);
+    const result = await this.artistRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Artist with ID ${id} not found`);
     }
-
-    // Iterate over albums to set artistId to null for the artist being removed
-    database.albums.forEach((album) => {
-      if (album.artistId === id) {
-        album.artistId = null;
-      }
-    });
-
-    // Iterate over tracks to set artistId to null for the artist being removed
-    database.tracks.forEach((track) => {
-      if (track.artistId === id) {
-        track.artistId = null;
-      }
-    });
-
-    database.artists.splice(index, 1);
   }
 }
