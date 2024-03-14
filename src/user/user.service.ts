@@ -10,54 +10,45 @@ import { User } from './entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
 import { database } from '../database/db';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto): User {
-    const { login, password } = createUserDto;
-    if (!login || !password) {
-      throw new BadRequestException('Login and password are required');
-    }
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
-    const newUser: User = {
-      id: uuidv4(),
-      login,
-      password,
-      version: 1,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    database.users.push(newUser);
-    return {
-      id: newUser.id,
-      login: newUser.login,
-      version: newUser.version,
-      createdAt: newUser.createdAt,
-      updatedAt: newUser.updatedAt,
-    };
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find();
   }
 
-  findAll(): User[] {
-    return database.users;
-  }
-
-  findOne(id: string): User {
+  async findOne(id: string): Promise<User> {
     isValidID(id);
-    const user = database.users.find((u) => u.id === id);
+    const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
     return user;
   }
 
-  update(id: string, updateUserDto: UpdateUserDto): User {
-    isValidID(id);
-    if (!updateUserDto.newPassword || !updateUserDto.oldPassword) {
-      throw new BadRequestException(
-        'Old password and New password are required',
-      );
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const { login, password } = createUserDto;
+    if (!login || !password) {
+      throw new BadRequestException('Login and password are required');
     }
-    const user = this.findOne(id);
+
+    const newUser = this.userRepository.create({
+      login,
+      password,
+    });
+    return await this.userRepository.save(newUser);
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    isValidID(id);
+    const user = await this.findOne(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
@@ -67,23 +58,16 @@ export class UserService {
     }
     user.password = updateUserDto.newPassword;
     user.version += 1;
-    user.updatedAt = Date.now();
+    user.updatedAt = new Date().getTime();
 
-    return {
-      id: user.id,
-      login: user.login,
-      version: user.version,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return await this.userRepository.save(user);
   }
 
-  remove(id: string): void {
+  async remove(id: string): Promise<void> {
     isValidID(id);
-    const userIndex = database.users.findIndex((u) => u.id === id);
-    if (userIndex === -1) {
+    const result = await this.userRepository.delete(id);
+    if (result.affected === 0) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    database.users.splice(userIndex, 1);
   }
 }
