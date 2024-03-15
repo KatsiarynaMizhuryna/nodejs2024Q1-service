@@ -50,6 +50,16 @@ export class ArtistService {
   async update(id: string, updateArtistDto: UpdateArtistDto): Promise<Artist> {
     isValidID(id);
     const artist = await this.findOne(id);
+    if (!artist) {
+      throw new NotFoundException(`Artist with ID ${id} not found`);
+    }
+    if (
+      typeof updateArtistDto.grammy !== 'boolean' ||
+      typeof updateArtistDto.name !== 'string'
+    ) {
+      throw new BadRequestException('Invalid dto');
+    }
+
     artist.name = updateArtistDto.name;
     artist.grammy = updateArtistDto.grammy;
     return await this.artistRepository.save(artist);
