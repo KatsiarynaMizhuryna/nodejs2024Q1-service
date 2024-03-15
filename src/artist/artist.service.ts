@@ -6,9 +6,7 @@ import {
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
-import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
-import { database } from 'src/database/db';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 

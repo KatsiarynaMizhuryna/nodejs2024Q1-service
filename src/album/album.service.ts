@@ -6,9 +6,7 @@ import {
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { Album } from './entities/album.entity';
-import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
-import { database } from '../database/db';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
