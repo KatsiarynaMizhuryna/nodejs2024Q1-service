@@ -18,6 +18,7 @@ export class AlbumService {
     @InjectRepository(Album)
     private readonly albumRepository: Repository<Album>,
   ) {}
+
   async create(createAlbumDto: CreateAlbumDto): Promise<Album> {
     const { name, year, artistId } = createAlbumDto;
     if (name === undefined || year === undefined || artistId === undefined) {
@@ -37,6 +38,7 @@ export class AlbumService {
   }
 
   async findOne(id: string): Promise<Album> {
+    isValidID(id);
     const album = await this.albumRepository.findOne({ where: { id } });
     if (!album) {
       throw new NotFoundException(`Album with ID ${id} not found`);
@@ -45,7 +47,17 @@ export class AlbumService {
   }
 
   async update(id: string, updateAlbumDto: UpdateAlbumDto): Promise<Album> {
+    isValidID(id);
     const album = await this.findOne(id);
+    if (
+      typeof updateAlbumDto.name !== 'string' ||
+      typeof updateAlbumDto.year !== 'number'
+    ) {
+      throw new BadRequestException('Invalid dto');
+    }
+    if (!album) {
+      throw new NotFoundException(`Album with ID ${id} not found`);
+    }
 
     if (updateAlbumDto.name) {
       album.name = updateAlbumDto.name;
@@ -61,6 +73,7 @@ export class AlbumService {
   }
 
   async remove(id: string): Promise<void> {
+    isValidID(id);
     const result = await this.albumRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Album with ID ${id} not found`);
