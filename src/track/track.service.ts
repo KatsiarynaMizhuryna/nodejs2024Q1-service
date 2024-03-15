@@ -24,6 +24,7 @@ export class TrackService {
   }
 
   async findOne(id: string): Promise<Track> {
+    isValidID(id);
     const track = await this.trackRepository.findOne({ where: { id } });
     if (!track) {
       throw new NotFoundException(`Track with ID ${id} not found`);
@@ -47,7 +48,17 @@ export class TrackService {
   }
 
   async update(id: string, updateTrackDto: UpdateTrackDto): Promise<Track> {
+    isValidID(id);
     const track = await this.findOne(id);
+    if (!track) {
+      throw new NotFoundException(`Track with ID ${id} not found`);
+    }
+    if (
+      typeof updateTrackDto.name !== 'string' ||
+      typeof updateTrackDto.duration !== 'number'
+    ) {
+      throw new BadRequestException('Invalid dto');
+    }
 
     if (updateTrackDto.name) {
       track.name = updateTrackDto.name;
@@ -66,6 +77,7 @@ export class TrackService {
   }
 
   async remove(id: string): Promise<void> {
+    isValidID(id);
     const result = await this.trackRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Track with ID ${id} not found`);
