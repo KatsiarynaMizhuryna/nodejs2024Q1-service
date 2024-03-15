@@ -7,9 +7,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { v4 as uuidv4 } from 'uuid';
 import { isValidID } from '../helpers/id_validation';
-import { database } from '../database/db';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -38,12 +36,18 @@ export class UserService {
     if (!login || !password) {
       throw new BadRequestException('Login and password are required');
     }
-
     const newUser = this.userRepository.create({
       login,
       password,
     });
-    return await this.userRepository.save(newUser);
+    await this.userRepository.save(newUser);
+    return {
+      id: newUser.id,
+      login: newUser.login,
+      version: newUser.version,
+      createdAt: +newUser.createdAt,
+      updatedAt: +newUser.updatedAt,
+    };
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -52,22 +56,27 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-
     if (user.password !== updateUserDto.oldPassword) {
       throw new ForbiddenException('Old password is incorrect');
     }
     user.password = updateUserDto.newPassword;
     user.version += 1;
-    user.updatedAt = new Date().getTime();
-
-    return await this.userRepository.save(user);
+    await this.userRepository.save(user);
+    return {
+      id: user.id,
+      login: user.login,
+      version: user.version,
+      createdAt: +user.createdAt,
+      updatedAt: +user.updatedAt,
+    };
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string) {
     isValidID(id);
-    const result = await this.userRepository.delete(id);
-    if (result.affected === 0) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+    await this.userRepository.delete(id);
   }
 }
