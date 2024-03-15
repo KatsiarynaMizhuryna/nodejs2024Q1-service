@@ -3,7 +3,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { database } from '../database/db';
 import { isValidID } from '../helpers/id_validation';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
@@ -21,6 +20,16 @@ export class FavoriteService {
   ) {}
 
   async getAllFavorites() {
+    const favorites = await this.getFavs();
+    const favResponse = {
+      albums: favorites.albums || [],
+      artists: favorites.artists || [],
+      tracks: favorites.tracks || [],
+    };
+    return favResponse;
+  }
+
+  private async getFavs() {
     let favorites = await this.favRepository.findOne({
       where: {},
       relations: {
@@ -37,73 +46,47 @@ export class FavoriteService {
         tracks: [],
       } as Favorites;
     }
-    const allFavorites = {
-      albums: favorites.albums,
-      artists: favorites.artists,
-      tracks: favorites.tracks,
-    };
 
-    return allFavorites;
+    return favorites;
   }
 
   async addTrack(id: string) {
+    isValidID(id);
     const track = await this.entityManager.findOneBy(Track, { id });
     if (!track) {
-      throw new UnprocessableEntityException(
-        `Track with ID ${id} does not exist`,
-      );
+      throw new UnprocessableEntityException(`Track with ID ${id} not found`);
     }
-    let favorites = await this.favRepository.findOne({
-      where: {},
-      relations: {
-        albums: true,
-        artists: true,
-        tracks: true,
-      },
-    });
+    const favorites = await this.getFavs();
     favorites['tracks'].push(track as any);
-    await this.favRepository.save(favorites);
+    return await this.favRepository.save(favorites);
   }
 
   async addAlbum(id: string) {
+    isValidID(id);
     const album = await this.entityManager.findOneBy(Album, { id });
     if (!album) {
-      throw new UnprocessableEntityException(
-        `Album with ID ${id} does not exist`,
-      );
+      throw new UnprocessableEntityException(`Album with ID ${id} not found`);
     }
-    let favorites = await this.favRepository.findOne({
-      where: {},
-      relations: {
-        albums: true,
-        artists: true,
-        tracks: true,
-      },
-    });
+    const favorites = await this.getFavs();
     favorites['albums'].push(album as any);
-    await this.favRepository.save(favorites);
+    return await this.favRepository.save(favorites);
   }
 
   async addArtist(id: string) {
+    isValidID(id);
     const artist = await this.entityManager.findOneBy(Artist, { id });
     if (!artist) {
       throw new UnprocessableEntityException(
         `Artist with ID ${id} does not exist`,
       );
     }
-    let favorites = await this.favRepository.findOne({
-      where: {},
-      relations: {
-        albums: true,
-        artists: true,
-        tracks: true,
-      },
-    });
+    const favorites = await this.getFavs();
     favorites['artists'].push(artist as any);
-    await this.favRepository.save(favorites);
+    return await this.favRepository.save(favorites);
   }
 
   async removeArtist(id: string) {
+    isValidID(id);
     const artist = await this.entityManager.findOneBy(Artist, { id });
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${id} does not exist`);
@@ -125,6 +108,7 @@ export class FavoriteService {
   }
 
   async removeAlbum(id: string) {
+    isValidID(id);
     const album = await this.entityManager.findOneBy(Album, { id });
     if (!album) {
       throw new NotFoundException(`Album with ID ${id} does not exist`);
@@ -144,6 +128,7 @@ export class FavoriteService {
   }
 
   async removeTrack(id: string) {
+    isValidID(id);
     const track = await this.entityManager.findOneBy(Track, { id });
     if (!track) {
       throw new NotFoundException(`Track with ID ${id} does not exist`);
