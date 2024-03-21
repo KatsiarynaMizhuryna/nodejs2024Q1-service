@@ -1,0 +1,9 @@
+.git
+dist
+doc 
+node_modules
+.env
+.env.example
+.eslintrc.js
+.gitignore
+README.md
